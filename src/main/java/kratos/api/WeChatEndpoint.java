@@ -1,16 +1,18 @@
 package kratos.api;
 
-import kratos.util.JaxbUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Arrays;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.*;
+
 import kratos.api.req.MessageReq;
+import kratos.util.JaxbUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created on 2018/7/20.
@@ -30,8 +32,8 @@ public class WeChatEndpoint {
 
     @PostMapping("/weChat")
     public String postWeChat(@RequestParam(name = "signature", required = false) String signature,
-                             @RequestParam(name = "timestamp", required = false) String timestamp,
-                             @RequestParam(name = "nonce", required = false) String nonce, @RequestBody(required = false) String message) {
+            @RequestParam(name = "timestamp", required = false) String timestamp,
+            @RequestParam(name = "nonce", required = false) String nonce, @RequestBody(required = false) String message) {
         log.info("获取到外部post请求, signature = {}, timestamp = {}, nonce = {}, message = {}", signature, timestamp, nonce, message);
         if (signature != null && validate(signature, timestamp, nonce)) {
             log.info("获取到外部post请求，验证通过");
@@ -50,11 +52,11 @@ public class WeChatEndpoint {
             String openId = messageReq.getFromUserName();
             String content = messageReq.getContent();
             // TODO: 2019/1/1
-//            Memo memo = new Memo();
-//            memo.setOpenId(openId);
-//            memo.setContent(content);
-//            memo.setCreatedTime(new Date());
-//            memoDao.save(memo);
+            // Memo memo = new Memo();
+            // memo.setOpenId(openId);
+            // memo.setContent(content);
+            // memo.setCreatedTime(new Date());
+            // memoDao.save(memo);
         } else if (StringUtils.equals(messageReq.getMsgType(), event)) {
             log.info("收到事件消息，fromUser = {},createTime = {},event = {},key = {}", messageReq.getFromUserName(),
                     messageReq.getCreateTime(), messageReq.getEvent(), messageReq.getEventKey());
@@ -108,6 +110,5 @@ public class WeChatEndpoint {
         log.info("generateCode:" + generateCode);
         return generateCode.equals(signature);
     }
-
 
 }

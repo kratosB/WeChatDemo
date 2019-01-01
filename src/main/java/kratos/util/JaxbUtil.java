@@ -1,11 +1,12 @@
 package kratos.util;
 
-import javax.xml.bind.*;
-import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.namespace.QName;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
+
+import javax.xml.bind.*;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.namespace.QName;
 
 /**
  * @author iqx
