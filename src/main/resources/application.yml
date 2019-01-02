@@ -5,3 +5,8 @@ spring:
   redis:
     host: ${sql_ip_address}
     port: ${spring.redis.port}
+  datasource:
+    url: jdbc:mysql://${sql_ip_address}:3306/dota2?characterEncoding=utf8&cacheServerConfiguration=true&zeroDateTimeBehavior=convertToNull&autoReconnect=true&autoReconnectForPools=true&allowMultiQueries=true
+    username: ${sql_username}
+    password: ${sql_password}
+    driver-class-name: com.mysql.jdbc.Driver

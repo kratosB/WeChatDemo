@@ -1,21 +1,21 @@
 package kratos.api;
 
-import kratos.api.req.MessageReq;
-import kratos.util.JaxbUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.web.bind.annotation.*;
+
+import kratos.api.req.MessageReq;
+import kratos.dao.MemoDao;
+import kratos.dao.entity.Memo;
+import kratos.util.JaxbUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created on 2018/7/20.
@@ -26,17 +26,21 @@ import java.util.concurrent.TimeUnit;
 @RestController
 public class WeChatEndpoint {
 
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
 
-    public WeChatEndpoint(RedisTemplate redisTemplate) {
+    private MemoDao memoDao;
+
+    @Autowired
+    public WeChatEndpoint(RedisTemplate<String, String> redisTemplate, MemoDao memoDao) {
         this.redisTemplate = redisTemplate;
+        this.memoDao = memoDao;
     }
 
     @GetMapping("/weChat")
     public String getWeChat(@RequestParam(name = "signature", required = false) String signature,
-                            @RequestParam(name = "timestamp", required = false) String timestamp,
-                            @RequestParam(name = "nonce", required = false) String nonce,
-                            @RequestParam(name = "echostr", required = false) String echostr) {
+            @RequestParam(name = "timestamp", required = false) String timestamp,
+            @RequestParam(name = "nonce", required = false) String nonce,
+            @RequestParam(name = "echostr", required = false) String echostr) {
         log.info("获取到外部get请求, signature = {}, timestamp = {}, nonce = {}, echostr = {}", signature, timestamp, nonce, echostr);
         if (signature != null && validate(signature, timestamp, nonce)) {
             log.info("获取到外部get请求，验证通过");
@@ -49,8 +53,8 @@ public class WeChatEndpoint {
 
     @PostMapping("/weChat")
     public String postWeChat(@RequestParam(name = "signature", required = false) String signature,
-                             @RequestParam(name = "timestamp", required = false) String timestamp,
-                             @RequestParam(name = "nonce", required = false) String nonce, @RequestBody(required = false) String message) {
+            @RequestParam(name = "timestamp", required = false) String timestamp,
+            @RequestParam(name = "nonce", required = false) String nonce, @RequestBody(required = false) String message) {
         log.info("获取到外部post请求, signature = {}, timestamp = {}, nonce = {}, message = {}", signature, timestamp, nonce, message);
         if (signature != null && validate(signature, timestamp, nonce)) {
             log.info("获取到外部post请求，验证通过");
@@ -70,11 +74,11 @@ public class WeChatEndpoint {
             String redisKey = "Memo|" + openId;
             if (redisTemplate.hasKey(redisKey)) {
                 if (StringUtils.equals(content, "1")) {
-//                    Memo memo = new Memo();
-//                    memo.setOpenId(openId);
-//                    memo.setContent(content);
-//                    memo.setCreatedTime(new Date());
-//                    memoDao.save(memo);
+                    Memo memo = new Memo();
+                    memo.setOpenId(openId);
+                    memo.setContent(content);
+                    memo.setCreatedTime(new Date());
+                    memoDao.save(memo);
                 } else if (StringUtils.equals(content, "2")) {
                     redisTemplate.delete(redisKey);
                 } else {
@@ -85,8 +89,7 @@ public class WeChatEndpoint {
             } else {
                 ValueOperations<String, String> operations = redisTemplate.opsForValue();
                 operations.set(redisKey, content, 60, TimeUnit.SECONDS);
-                String result = getResult(messageReq, "收到内容为\"" + content + "\"的消息，是否要存入备忘录，保存备忘请按1，不保存无需操作");
-                return result;
+                return getResult(messageReq, "收到内容为\"" + content + "\"的消息，是否要存入备忘录，保存备忘请按1，不保存无需操作");
             }
         } else if (StringUtils.equals(messageReq.getMsgType(), event)) {
             log.info("收到事件消息，fromUser = {},createTime = {},event = {},key = {}", messageReq.getFromUserName(),
@@ -121,7 +124,7 @@ public class WeChatEndpoint {
     private boolean validate(String signature, String timestamp, String nonce) {
         log.info("开始验证请求是否是从微信来的，timestamp = {}，nonce = {}，signature = {}", timestamp, nonce, signature);
         String token = "bzq";
-        String[] paramArray = new String[]{
+        String[] paramArray = new String[] {
                 token, timestamp, nonce
         };
         Arrays.sort(paramArray);
