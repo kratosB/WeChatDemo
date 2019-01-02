@@ -1,2 +1,7 @@
 server:
   port: 80
+
+spring:
+  redis:
+    host: ${sql_ip_address}
+    port: ${spring.redis.port}
