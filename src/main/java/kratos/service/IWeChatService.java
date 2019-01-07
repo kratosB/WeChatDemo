@@ -22,4 +22,26 @@ public interface IWeChatService {
      * @return authorization_code
      */
     String getAuthToken(String code);
+
+    /**
+     * 发送消息给关注的人
+     *
+     * @param toUser
+     *            接收人的openId
+     * @param message
+     *            消息内容
+     */
+    void sendMessage(String toUser, String message);
+
+    /**
+     * 发送模板消息给关注的人
+     *
+     * @param toUser
+     *            接收人的openId
+     * @param templateCode
+     *            模板id
+     * @param customerName
+     *            模板中的参数
+     */
+    void sendTemplateMessage(String toUser, String templateCode, String customerName);
 }

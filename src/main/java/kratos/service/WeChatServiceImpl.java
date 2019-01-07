@@ -6,6 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -61,5 +65,57 @@ public class WeChatServiceImpl implements IWeChatService {
         String accessToken = resultMap.get("access_token");
         log.info("accessToken = {}", accessToken);
         return accessToken;
+    }
+
+    @Override
+    public void sendMessage(String toUser, String message) {
+        String url = weChatApiAddress + "/cgi-bin/message/custom/send?access_token=" + getAccessToken();
+        Map<String, String> textMap = new HashMap<>(2);
+        textMap.put("content", message);
+        Map<String, Object> dataMap = new HashMap<>(2);
+        dataMap.put("text", textMap);
+        dataMap.put("touser", toUser);
+        dataMap.put("msgtype", "text");
+        HttpHeaders headers = new HttpHeaders();
+        MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
+        headers.setContentType(type);
+        headers.add("Accept", MediaType.APPLICATION_JSON.toString());
+        HttpEntity<String> formEntity = new HttpEntity<>(JsonMapper.nonEmptyMapper().toJson(dataMap), headers);
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, formEntity, String.class);
+            log.info(responseEntity.getBody());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendTemplateMessage(String toUser, String templateCode, String customerName) {
+        String url = weChatApiAddress + "/cgi-bin/message/template/send?access_token=" + getAccessToken();
+        Map<String, String> customerNameMap = new HashMap<>(2);
+        customerNameMap.put("value", customerName);
+        customerNameMap.put("color", "#173177");
+
+        Map<String, Object> data = new HashMap<>(1);
+        data.put("customerName", customerNameMap);
+
+        Map<String, Object> dataMap = new HashMap<>(3);
+        dataMap.put("touser", toUser);
+        dataMap.put("template_id", templateCode);
+        dataMap.put("data", data);
+        dataMap.put("url", "http://www.qq.com");
+        HttpHeaders headers = new HttpHeaders();
+        MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
+        headers.setContentType(type);
+        headers.add("Accept", MediaType.APPLICATION_JSON.toString());
+        HttpEntity<String> formEntity = new HttpEntity<>(JsonMapper.nonEmptyMapper().toJson(dataMap), headers);
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, formEntity, String.class);
+            log.info(responseEntity.getBody());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 }
